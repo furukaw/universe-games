@@ -35,6 +35,15 @@ let int_to_yen i =
   else if mod6 = 4 then Y100
   else Y500
 
+let yen_to_int y = match y with
+  | Y1 -> 1
+  | Y5 -> 5
+  | Y10 -> 10
+  | Y50 -> 50
+  | Y100 -> 100
+  | Y500 -> 500
+  | _ -> 0
+
 let yen_exist yen = match yen with
   | No -> false
   | a -> true
@@ -214,7 +223,7 @@ let click world (x, y) =
       let new_yen = yen_upgrade clicked.yen num in
       ({clicked with yen = new_yen}
        :: List.map (fun cell -> {cell with yen = No}) other_inner,
-       if new_yen = No then 1000 else 0) in
+       (((yen_to_int clicked.yen) * num) / 1000) * 1000) in
   {world with cells = new_inner @ outer;
               score = world.score + add_score}
 
