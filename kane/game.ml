@@ -6,6 +6,9 @@ open Color
 let time_per_second = 10
 let time_limit = 1200
 let move_speed = 16.
+let truly_random = true
+
+;;if truly_random then Random.self_init () else Random.init 0
 
 type yen_t = Y1 | Y5 | Y10 | Y50 | Y100 | Y500 | No
 
@@ -22,8 +25,6 @@ type world_t = {
   message : string;
   select : (int * int) option;
 }
-
-;;Random.init 0
 
 let int_to_yen i =
   let mod6 = i mod 6 in
