@@ -8,6 +8,10 @@ table {
     left: 800px;
 }
 
+.first td {
+    padding-top: 20px;
+}
+
 td {
     text-align: center;
     padding: 5px 10px;
