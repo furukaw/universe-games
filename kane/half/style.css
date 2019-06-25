@@ -2,12 +2,17 @@ body {
     font-size: 16px;
     line-height: 24px;
     font-family: sans-serif;
+    margin: 0;
+}
+
+.canvas-size {
+    width: 385px;
+    position: absolute;
+    top: 600px;
 }
 
 table {
     margin: 0 auto;
-    position: absolute;
-    top: 600px;
 }
 
 .first td {
