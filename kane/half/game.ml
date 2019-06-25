@@ -25,7 +25,7 @@ let rate : float = (1. /. (float_of_int time_per_second))
 
 (* 広さ *)
 let lines : int = 8   (* 上下の列数 *)
-let rows : int = 12   (* 左右の列数 *)
+let rows : int = 6   (* 左右の列数 *)
 let top : int = 1     (* 上に何マス分の余白があるか *)
 let bottom : int = 0  (* 下に何マス文の余白があるか *)
 let length = 64       (* １マスの辺の長さ *)
@@ -57,13 +57,13 @@ type world_t = {
 }
 
 (* 画像 *)
-let background_image = read_image "images/background.png"  (* 自作 *)
-let yen1_image = read_image "images/yen1.png"  (* いらすとやのいらすとを縮小 *)
-let yen5_image = read_image "images/yen5.png"
-let yen10_image = read_image "images/yen10.png"
-let yen50_image = read_image "images/yen50.png"
-let yen100_image = read_image "images/yen100.png"
-let yen500_image = read_image "images/yen500.png"
+let background_image = read_image "../images/background_half.png"  (* 自作 *)
+let yen1_image = read_image "../images/yen1.png"  (* いらすとやのいらすとを縮小 *)
+let yen5_image = read_image "../images/yen5.png"
+let yen10_image = read_image "../images/yen10.png"
+let yen50_image = read_image "../images/yen50.png"
+let yen100_image = read_image "../images/yen100.png"
+let yen500_image = read_image "../images/yen500.png"
 
 (* -------------------------------- 初期値 -------------------------------- *)
 
@@ -170,8 +170,11 @@ let rokketa (i : int) : string =
 let time_to_second (time : int) : int =
   (time_limit - time) / time_per_second
 
+(* 透け黄色 *)
+let semi_yellow : Color.t = make_color ~alpha:0.3 255 255 0
+
 (* 状態を受け取ってゲーム画像を返す *)
-let draw ({cells; score; time; message} : world_t) : Image.t =
+let draw ({cells; score; time; message; select} : world_t) : Image.t =
   (* 背景の上に小銭画像の羅列 *)
   let field : Image.t = 
     let cells_with_yen = List.filter (fun {yen} -> yen_exist yen) cells in
@@ -186,6 +189,21 @@ let draw ({cells; score; time; message} : world_t) : Image.t =
         cells_with_yen in
     let images = List.map (fun {yen} -> yen_to_image yen) cells_with_yen in
     place_images images poss background_image in
+  let with_selected = match select with
+    | None -> field
+    | Some (x, y) ->
+      let square_frame =
+        rectangle 65. 65. ~fill:false ~outline_size:4. yellow in
+      let square =
+        place_image
+          (rectangle 65. 65. ~fill:true semi_yellow)
+          (0., 0.)
+          square_frame in
+      place_image
+        square
+        (float_of_int (length * (x - 1)),
+         float_of_int (length * (top + y - 1)))
+        field in        
   (* 小銭羅列画像に残り時間と点数の文字列を足したもの *)
   let with_texts =
     let time_str = sanketa (time_to_second time) in
@@ -198,14 +216,20 @@ let draw ({cells; score; time; message} : world_t) : Image.t =
       [(30., 15.);
        (float_of_int (width - 169), 15.);
        (float_of_int (width - 44), 23.)]
-      field in
+      with_selected in
   (* 言うことがあれば画像に足す *)
   match message with
   | "" -> with_texts
   | _ ->
+    let text = text message ~size:40 blue in
+    let square =
+      place_image
+        text
+        (13., 8.)
+        (rectangle 200. 60. ~fill:true (make_color ~alpha:0.6 255 255 255)) in
     place_image
-      (text message blue)
-      (float_of_int ((width / 2) - 40), 20.)
+      square
+      (float_of_int ((width / 2) - 100), 290.)
       with_texts
 
 (* -------------------------------- 座標計算 -------------------------------- *)
@@ -269,8 +293,8 @@ let group (cell : cell_t) (cells : cell_t list) : cell_t list * cell_t list =
           new_others in
   group [] [cell] [] cells
 
-(* クリック時の処理をした世界を返す *)
-let click (world : world_t) ((x, y) : int * int) : world_t =
+(* クリック時の処理をした世界と変わったかどうかを返す *)
+let click (world : world_t) ((x, y) : int * int) : world_t * bool =
 
   (* clicked：クリックしたマスを含むリスト  other_cells：それ以外のマスのリスト *)
   let (clicked, other_cells) : cell_t list * cell_t list =
@@ -291,48 +315,46 @@ let click (world : world_t) ((x, y) : int * int) : world_t =
       (fun {pos} -> pos = (x, y))
       inner in
 
-  (* new_inner：消えたマス  add_score：今回のクリックで得られる特典(円) *)
-  let (new_inner, add_score) : cell_t list * int =
+  (* new_inner：消えたマス  add_score：今回のクリックで得られる得点(円) *)
+  let (new_inner, changed, add_score) : cell_t list * bool * int =
     (* num：消えるマスの数 *)
     let num : int = List.length other_inner + 1 in
     if num < yen_need clicked.yen
-    then (inner, 0)
+    then (inner, false, 0)
     else
       (* new_yen：新しい小銭 *)
       let new_yen : yen_t = yen_upgrade clicked.yen num in
       ({clicked with yen = new_yen}
        :: List.map (fun cell -> {cell with yen = No}) other_inner,
+       true,
        (((yen_to_int clicked.yen) * num) / 1000) * 1000) in
-  {world with cells = new_inner @ outer;
-              score = world.score + add_score}
+  ({world with cells = new_inner @ outer;
+               score = world.score + add_score},
+   changed)
   
 (* -------------------------------- マウス処理 -------------------------------- *)
 
-(* 世界と、画面からはみ出ないまま離した時のマウス位置を受け取って、処理して新しい世界を返す *)
+(* 世界と、離した時のマウス位置を受け取って、処理した新しい世界と変わったかを返す *)
 let on_valid_click (world : world_t) ((x, y) : int * int) : world_t =
   match world.select with
   | None ->
-    {world with select = None}
+    let (new_world, changed) = click world (x, y) in
+    if changed then {new_world with select = None}
+    else {world with select = Some (x, y)}
   | Some (dx, dy) ->
     if x = dx && y = dy
-    then
-      {(click world (x, y)) with
-       select = None}
+    then {world with select = None}
     else if next (x, y) (dx, dy)
-    then
-      {(swap world (x, y) (dx, dy)) with select = None}
+    then {(swap world (x, y) (dx, dy)) with select = None}
     else
-      {world with select = None}
+      let (new_world, changed) = click world (x, y) in
+      if changed then {new_world with select = None}
+      else {world with select = Some (x, y)}
 
 (* マウスが何かしたときの処理をする *)
 let on_mouse (world : world_t) (x : float) (y : float) (mouse : string)
   : world_t =
   match mouse with
-  | "button_down" ->  (* マウス左ボタンが押された時、世界にその位置を記録 *)
-    begin
-      let pos : (int * int) option = zahyou_to_pos_op x y in
-      {world with select = pos}
-    end
   | "button_up" ->  (* マウス左ボタンが離された時、必要に応じて処理 *)
     begin
       let pos = zahyou_to_pos_op x y in

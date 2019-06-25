@@ -1,0 +1,48 @@
+body {
+    font-size: 16px;
+    line-height: 24px;
+}
+
+table {
+    margin: 0 auto;
+    position: absolute;
+    top: 600px;
+}
+
+.first td {
+    padding-top: 20px;
+}
+
+td {
+    text-align: center;
+    padding: 5px 10px;
+}
+
+.circle {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    text-align:center;
+    border: 2px solid #222222;
+}
+
+.gray {
+    background-color: #DDDDDD;
+}
+
+.gold {
+    background-color: #EECC88;
+}
+
+.brown {
+    background-color: #CC9944;
+}
+
+.two {
+    font-size: 16px;
+}
+
+.three {
+    font-size: 12px;
+}
