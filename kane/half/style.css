@@ -21,7 +21,7 @@ table {
 
 td {
     text-align: center;
-    padding: 5px 10px;
+    padding: 5px 6px;
 }
 
 .circle {
@@ -51,4 +51,12 @@ td {
 
 .three {
     font-size: 12px;
+}
+
+.select {
+    display: inline-block;
+    width: 26px;
+    height: 26px;
+    border-radius: 0;
+    border: 3px solid #EEEE00;
 }
