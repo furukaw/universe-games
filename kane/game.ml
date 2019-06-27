@@ -58,6 +58,7 @@ type world_t = {
 
 (* 画像 *)
 let background_image = read_image "images/background.png"  (* 自作 *)
+let background_end_image = read_image "images/background_end.png"
 let yen1_image = read_image "images/yen1.png"  (* いらすとやのいらすとを縮小 *)
 let yen5_image = read_image "images/yen5.png"
 let yen10_image = read_image "images/yen10.png"
@@ -171,7 +172,8 @@ let time_to_second (time : int) : int =
   (time_limit - time) / time_per_second
 
 (* 状態を受け取ってゲーム画像を返す *)
-let draw ({cells; score; time; message} : world_t) : Image.t =
+let draw_with_bg ({cells; score; time; message} : world_t) (bg : Image.t)
+  : Image.t =
   (* 背景の上に小銭画像の羅列 *)
   let field : Image.t = 
     let cells_with_yen = List.filter (fun {yen} -> yen_exist yen) cells in
@@ -185,7 +187,7 @@ let draw ({cells; score; time; message} : world_t) : Image.t =
             float_of_int (length * (top + y - 1)) +. ym))
         cells_with_yen in
     let images = List.map (fun {yen} -> yen_to_image yen) cells_with_yen in
-    place_images images poss background_image in
+    place_images images poss bg in
   (* 小銭羅列画像に残り時間と点数の文字列を足したもの *)
   let with_texts =
     let time_str = sanketa (time_to_second time) in
@@ -207,6 +209,9 @@ let draw ({cells; score; time; message} : world_t) : Image.t =
       (text message blue)
       (float_of_int ((width / 2) - 40), 20.)
       with_texts
+
+let draw (world : world_t) : Image.t =
+  draw_with_bg world background_image
 
 (* -------------------------------- 座標計算 -------------------------------- *)
 
@@ -417,7 +422,7 @@ let stop_when ({time} : world_t) : bool = time_limit <= time
 (* 世界を受け取って、ゲーム終了後のゲーム画面を返す *)
 let to_draw_last (world : world_t) : Image.t =
   let last_world = {world with message = "TIME UP"} in
-  draw last_world
+  draw_with_bg last_world background_end_image
 
 (* ゲーム開始 *)
 let _ =
