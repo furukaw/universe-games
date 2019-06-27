@@ -1,14 +1,14 @@
 body {
-    font-size: 16px;
-    line-height: 24px;
+    font-size: 14px;
+    line-height: 20px;
     font-family: sans-serif;
     margin: 0;
 }
 
 .canvas-size {
-    width: 385px;
+    width: 321px;
     position: absolute;
-    top: 600px;
+    top: 460px;
 }
 
 table {
@@ -21,13 +21,13 @@ table {
 
 td {
     text-align: center;
-    padding: 5px 6px;
+    padding: 5px 2px;
 }
 
 .circle {
     display: inline-block;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     text-align:center;
     border: 2px solid #222222;
@@ -45,12 +45,8 @@ td {
     background-color: #CC9944;
 }
 
-.two {
-    font-size: 16px;
-}
-
 .three {
-    font-size: 12px;
+    font-size: 10px;
 }
 
 .select {

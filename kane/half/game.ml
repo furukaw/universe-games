@@ -24,8 +24,8 @@ let truly_random : bool = true
 let rate : float = (1. /. (float_of_int time_per_second))
 
 (* 広さ *)
-let lines : int = 8   (* 上下の列数 *)
-let rows : int = 6   (* 左右の列数 *)
+let lines : int = 6   (* 上下の列数 *)
+let rows : int = 5   (* 左右の列数 *)
 let top : int = 1     (* 上に何マス分の余白があるか *)
 let bottom : int = 0  (* 下に何マス文の余白があるか *)
 let length = 64       (* １マスの辺の長さ *)
