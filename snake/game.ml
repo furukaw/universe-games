@@ -15,6 +15,7 @@ type world_t = {
   esa : vector;
   last_direction : direction;
   direction : direction;
+  pause : bool;
 }
 
 ;;Random.self_init ()
@@ -55,6 +56,7 @@ let initial_world = {
   esa = initial_esa;
   last_direction = Ue;
   direction = Ue;
+  pause = false;
 }
 
 let background =
@@ -86,38 +88,40 @@ let move (x, y) dir = match dir with
   | Hidari -> (x - 1, y)
   | Migi -> (x + 1, y)
 
-let on_tick ({head; body; others; length; direction; esa} as world : world_t)
-  : world_t =
-  let new_head = move head direction in
-  if new_head = esa
-  then
-    let new_body =
-      (2, head)
-      :: (List.map (fun (n, xy) -> (n + 1, xy)) body) in
-    let new_length = length + 1 in
-    let (new_esa, new_others) = generate_esa others in
-    {world with
-     head = new_head;
-     body = new_body;
-     others = new_others;
-     length = new_length;
-     last_direction = world.direction;
-     esa = new_esa}
+let on_tick ({head; body; others; length; direction; esa; pause} as world
+             : world_t) : world_t =
+  if pause then world
   else
-    let (other, new_body) =
-      List.partition (fun (n, _) -> n > length)
-        ((2, head)
-         :: (List.map (fun (n, xy) -> (n + 1, xy)) body)) in
-    let new_others =
-      if other = [] then (List.filter ((<>) new_head) others)
-      else
+    let new_head = move head direction in
+    if new_head = esa
+    then
+      let new_body =
+        (2, head)
+        :: (List.map (fun (n, xy) -> (n + 1, xy)) body) in
+      let new_length = length + 1 in
+      let (new_esa, new_others) = generate_esa others in
+      {world with
+       head = new_head;
+       body = new_body;
+       others = new_others;
+       length = new_length;
+       last_direction = world.direction;
+       esa = new_esa}
+    else
+      let (other, new_body) =
+        List.partition (fun (n, _) -> n > length)
+          ((2, head)
+           :: (List.map (fun (n, xy) -> (n + 1, xy)) body)) in
+      let new_others =
+        if other = [] then (List.filter ((<>) new_head) others)
+        else
         (snd (List.hd other))
         :: (List.filter ((<>) new_head) others) in
-  {world with
-   head = new_head;
-   body = new_body;
-   others = new_others;
-   last_direction = world.direction}
+      {world with
+       head = new_head;
+       body = new_body;
+       others = new_others;
+       last_direction = world.direction}
 
 let can_turn old dir = match (old, dir) with
   | (Ue, Shita) | (Shita, Ue) | (Hidari, Migi) | (Migi, Hidari) -> None
@@ -131,9 +135,19 @@ let key_to_dir old key = match key with
   | _ -> None
     
 let on_key_release (world : world_t) (key : string) =
-  match key_to_dir world.last_direction key with
-  | Some (dir) -> {world with direction = dir}
-  | None -> world
+  if world.pause
+  then if key = " " then {world with pause = false}
+    else world
+  else if key = " " then {world with pause = true}
+  else
+    match key_to_dir world.last_direction key with
+    | Some (dir) -> {world with direction = dir}
+    | None -> world
+
+let on_mouse world x y ud =
+  match ud with
+  | "button_up" -> {world with pause = not world.pause}
+  | _ -> world
 
 let stop_when ({head; body} : world_t) : bool =
   let (x, y) = head in
@@ -162,6 +176,7 @@ let _ =
     ~to_draw:draw
     ~on_tick:on_tick
     ~on_key_release:on_key_release
+    ~on_mouse:on_mouse
     ~stop_when:stop_when
     ~to_draw_last:to_draw_last
     ~rate:rate			(* ゲームの動く速さ *)
