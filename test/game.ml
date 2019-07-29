@@ -20,8 +20,8 @@ let draw (world : world_t) : Image.t =
   let mouse_text = text ("mouse: " ^ world.mouse) black in
   let key_text = text ("key: " ^ world.key) black in
   place_images
-    [mouse_text; key_text]
-    [(0., 0.); (0., 30.)]
+    [mouse_text; key_text; circle ~fill:false 5. black]
+    [(0., 0.); (0., 30.); (5., 5.)]
     (empty_scene (float_of_int width) (float_of_int height))
 
 let on_mouse world (x : float) (y : float) (command : string) : world_t =

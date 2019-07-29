@@ -1,0 +1,33 @@
+open UniverseJs
+open World
+open Image
+open Color
+
+let width = 1000
+let height = 600
+let rate = 1.
+
+type world_t = {
+  message : string;
+}
+
+let initial_world = {
+  message = "start"
+}
+
+let draw world = empty_scene (float_of_int width) (float_of_int height)
+
+(* ゲーム開始 *)
+let _ =
+  big_bang
+    initial_world
+    ~name:"sweep"
+    ~width:width
+    ~height:height
+    ~to_draw:draw
+    (* ~on_mouse:on_mouse
+     * ~on_tick:on_tick
+     * ~stop_when:stop_when
+     * ~to_draw_last:to_draw_last *)
+    ~rate:rate			(* ゲームの動く速さ *)
+    
